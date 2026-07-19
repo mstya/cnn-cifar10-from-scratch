@@ -5,3 +5,5 @@ pandas>=2.3.0
 torch>=2.12.0
 torchvision>=0.27.0
 pillow>=12.3.0
+displaytree>=1.1.0
+fastai>=2.8.7
