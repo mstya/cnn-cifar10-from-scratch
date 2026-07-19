@@ -1,3 +1,4 @@
+import numpy as np
 from directory_tree import DisplayTree
 from matplotlib import pyplot as plt
 from fastai.vision.core import show_image, show_titled_image
@@ -36,3 +37,44 @@ def plot_img(img, label=None, info=None, ax=None):
 
     if ax is None:
         plt.show()
+
+def get_grid(num_rows, num_cols, figsize=(16, 8)):
+    fig, axes = plt.subplots(num_rows, num_cols, figsize=figsize)
+    if num_rows == 1:
+        axes = [axes]  # Ensure axes is iterable
+    elif num_cols == 1:
+        axes = [[ax] for ax in axes]  # Ensure 2D list
+    return fig, axes
+
+def visual_exploration(dataset, num_rows=2, num_cols=4):
+    """Visual exploration of the dataset by displaying random samples in a grid."""
+    # Calculate total number of samples to display
+    total_samples = num_rows * num_cols
+
+    # Randomly select indices from the dataset without replacement
+    # This ensures we get a diverse sample of the dataset
+    indices = np.random.choice(len(dataset), total_samples, replace=False)
+
+    # Create a grid of subplots with appropriate figure size
+    # Each subplot gets (3 x 4) inches per image for good visibility
+    fig, axes = get_grid(num_rows, num_cols, figsize=(num_cols * 3, num_rows * 4))
+
+    # Iterate through each axis and corresponding random index
+    for ax, idx in zip(axes.flatten(), indices):
+        # Load image and label from dataset at the random index
+        image, label = dataset[idx]
+
+        # Get human-readable description for the label
+        description = dataset.get_label_description(idx)
+
+        # Create a combined label string with both number and description
+        label = f"{label} - {description}"
+
+        # Create info string showing index and image dimensions
+        info = f"Index: {idx} Size: {image.size}"
+
+        # Plot the image on the current axis with label and info
+        plot_img(image, label=label, info=info, ax=ax)
+
+    # Display the complete grid of images
+    plt.show()
