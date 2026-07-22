@@ -2,6 +2,8 @@ import numpy as np
 from directory_tree import DisplayTree
 from matplotlib import pyplot as plt
 from fastai.vision.core import show_image, show_titled_image
+from torchvision import transforms
+
 
 def print_data_folder_structure(root_dir, max_depth=1):
     """Print the folder structure of the dataset directory."""
@@ -46,7 +48,7 @@ def get_grid(num_rows, num_cols, figsize=(16, 8)):
         axes = [[ax] for ax in axes]  # Ensure 2D list
     return fig, axes
 
-def visual_exploration(dataset, num_rows=2, num_cols=4):
+def visual_exploration(dataset, mean, std, num_rows=2, num_cols=4):
     """Visual exploration of the dataset by displaying random samples in a grid."""
     # Calculate total number of samples to display
     total_samples = num_rows * num_cols
@@ -64,6 +66,8 @@ def visual_exploration(dataset, num_rows=2, num_cols=4):
         # Load image and label from dataset at the random index
         image, label = dataset[idx]
 
+        image = Denormalize(mean, std)(image)
+
         # Get human-readable description for the label
         description = dataset.get_label_description(idx)
 
@@ -78,3 +82,14 @@ def visual_exploration(dataset, num_rows=2, num_cols=4):
 
     # Display the complete grid of images
     plt.show()
+
+class Denormalize:
+    def __init__(self, mean, std):
+
+        new_mean = [-m / s for m, s in zip(mean, std)]
+        new_std = [1 / s for s in std]
+
+        self.denormalize = transforms.Normalize(mean=new_mean, std=new_std)
+
+    def __call__(self, tensor):
+        return self.denormalize(tensor)
