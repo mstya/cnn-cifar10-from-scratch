@@ -1,6 +1,6 @@
 import kagglehub
 
-# kagglehub.login()
+kagglehub.login()
 
 path = kagglehub.competition_download('cifar-10')
 
