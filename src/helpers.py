@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import matplotlib.ticker as mticker
 from directory_tree import DisplayTree
@@ -94,7 +96,7 @@ class Denormalize:
         return self.denormalize(tensor)
 
 
-def plot_training_metrics(metrics):
+def plot_training_metrics(metrics, save_path):
     """
     Plots the training and validation metrics from a model training process.
 
@@ -115,7 +117,7 @@ def plot_training_metrics(metrics):
     epochs = range(1, num_epochs + 1)
 
     # Create a figure and a set of subplots with 1 row and 3 columns
-    fig, axes = plt.subplots(1, 3, figsize=(14, 6))
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
 
     # --- Configure the first subplot for training and validation loss ---
     # Select the first subplot
@@ -170,3 +172,4 @@ def plot_training_metrics(metrics):
     plt.tight_layout()
     # Display the plots
     plt.show()
+    fig.savefig(os.path.join(save_path, 'results.png'))
