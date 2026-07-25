@@ -107,15 +107,15 @@ def plot_training_metrics(metrics):
                         [train_losses, val_losses, val_accuracies].
     """
     # Unpack the metrics into their respective lists
-    train_losses, val_losses, val_accuracies = metrics
+    train_losses, val_losses, val_accuracies, train_accuracy = metrics
 
     # Determine the number of epochs from the length of the training losses list
     num_epochs = len(train_losses)
     # Create a 1-indexed range of epoch numbers for the x-axis
     epochs = range(1, num_epochs + 1)
 
-    # Create a figure and a set of subplots with 1 row and 2 columns
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    # Create a figure and a set of subplots with 1 row and 3 columns
+    fig, axes = plt.subplots(1, 3, figsize=(14, 6))
 
     # --- Configure the first subplot for training and validation loss ---
     # Select the first subplot
@@ -136,11 +136,14 @@ def plot_training_metrics(metrics):
     # --- Configure the second subplot for validation accuracy ---
     # Select the second subplot
     ax2 = axes[1]
+    # Plot train accuracy data
+    ax2.plot(epochs, train_accuracy, color='#085c75', linewidth=2.5, marker='o', markersize=5,
+             label='Training Accuracy')
     # Plot validation accuracy data
     ax2.plot(epochs, val_accuracies, color='#fa5f64', linewidth=2.5, marker='o', markersize=5,
              label='Validation Accuracy')
     # Set the title and axis labels for the accuracy plot
-    ax2.set_title('Validation Accuracy', fontsize=14)
+    ax2.set_title('Training & Validation Accuracy', fontsize=14)
     ax2.set_xlabel('Epoch', fontsize=12)
     ax2.set_ylabel('Accuracy (%)', fontsize=12)
     # Display the legend
