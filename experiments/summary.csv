@@ -1,0 +1,2 @@
+Experiment,Timestamp,Model,Epochs Trained,Batch Size,Optimizer,Learning Rate,Weight Decay,Seed,Final Val accuracy,Final Val loss,Best val accuracy,Best val loss,Best val epoch,Augmentation
+Exp #1,28/07/2026 21:43:38,SimpleCNN,10,64,Adam,0.0005,0.0005,1,71.14666666666666,0.8325652051289877,71.14666666666666,0.8325652051289877,10,RandomHorizontalFlip(p=0.5) + RandomRotation(15)
