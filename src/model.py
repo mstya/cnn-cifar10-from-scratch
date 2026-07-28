@@ -16,7 +16,7 @@ class CNNBlock(nn.Module):
         return self.block(x)
 
 class SimpleCNN(nn.Module):
-    def __init__(self, num_classes):
+    def __init__(self, num_classes, dropout):
         super(SimpleCNN, self).__init__()
 
         self.conv_block1 = CNNBlock(3, 32)
@@ -26,7 +26,7 @@ class SimpleCNN(nn.Module):
             nn.Flatten(),
             nn.Linear(4096, 512),
             nn.ReLU(),
-            nn.Dropout(p=0.6),
+            nn.Dropout(p=dropout),
             nn.Linear(512, num_classes),
         )
 
