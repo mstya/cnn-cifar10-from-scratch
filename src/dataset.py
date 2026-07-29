@@ -31,7 +31,8 @@ class TmpCifarDataset(Dataset):
     def get_label_description(self, idx):
         return self.df.iloc[idx]['label']
 
-def define_transformations(train_transforms, mean, std):
+def define_transformations(augmentation, mean, std):
+    train_transforms = build_train_transformations(augmentation)
     train_transforms.extend([ToTensor(), Normalize(mean, std)])
     train_transformations = Compose(train_transforms)
 
