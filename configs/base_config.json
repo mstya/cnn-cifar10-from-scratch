@@ -20,7 +20,7 @@
   },
 
   "training": {
-    "epochs": 1,
+    "epochs": 10,
     "optimizer": "Adam",
     "learning_rate": 0.0005,
     "weight_decay": 0.0005
