@@ -5,8 +5,12 @@
     "batch_size": 64,
     "train_split": 0.85,
     "augmentation": {
-      "horizontal_flip": true,
-      "rotation_degrees": 15
+      "random_horizontal_flip": {
+        "p": 0.5
+      },
+      "random_rotation": {
+        "degrees": 15
+      }
     }
   },
 
@@ -16,7 +20,7 @@
   },
 
   "training": {
-    "epochs": 10,
+    "epochs": 1,
     "optimizer": "Adam",
     "learning_rate": 0.0005,
     "weight_decay": 0.0005

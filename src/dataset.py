@@ -31,13 +31,9 @@ class TmpCifarDataset(Dataset):
     def get_label_description(self, idx):
         return self.df.iloc[idx]['label']
 
-def define_transformations(mean, std):
-    train_transformations = Compose([
-        RandomHorizontalFlip(p=0.5),
-        RandomRotation(15),
-        ToTensor(),
-        Normalize(mean, std)
-    ])
+def define_transformations(train_transforms, mean, std):
+    train_transforms.extend([ToTensor(), Normalize(mean, std)])
+    train_transformations = Compose(train_transforms)
 
     val_transformations = Compose([
         ToTensor(),
@@ -45,3 +41,15 @@ def define_transformations(mean, std):
     ])
 
     return train_transformations, val_transformations
+
+def build_train_transformations(augmentation):
+    transform_map = {
+        "random_horizontal_flip": lambda : RandomHorizontalFlip(p=float(augmentation['random_horizontal_flip']['p'])),
+        "random_rotation": lambda : RandomRotation(degrees=int(augmentation['random_rotation']['degrees'])),
+    }
+
+    transforms = []
+    for k in augmentation.keys():
+        transforms.append(transform_map[k]())
+
+    return transforms
