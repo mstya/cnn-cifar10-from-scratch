@@ -2,7 +2,7 @@ import os
 
 from PIL import Image
 from torch.utils.data import Dataset
-from torchvision.transforms import Compose, RandomHorizontalFlip, RandomRotation, ToTensor, Normalize
+from torchvision.transforms import Compose, RandomHorizontalFlip, RandomRotation, ToTensor, Normalize, RandomCrop
 
 
 class TmpCifarDataset(Dataset):
@@ -47,6 +47,7 @@ def build_train_transformations(augmentation):
     transform_map = {
         "random_horizontal_flip": lambda : RandomHorizontalFlip(p=float(augmentation['random_horizontal_flip']['p'])),
         "random_rotation": lambda : RandomRotation(degrees=int(augmentation['random_rotation']['degrees'])),
+        "random_crop": lambda : RandomCrop(size=int(augmentation['random_crop']['size']), padding=int(augmentation['random_crop']['padding'])),
     }
 
     transforms = []
