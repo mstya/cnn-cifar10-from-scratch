@@ -58,7 +58,14 @@ def validate_epoch(model, val_loader, loss_function, device):
 
     return epoch_val_loss, epoch_accuracy
 
-def training_loop(model, train_loader, val_loader, loss_function, optimizer, num_epochs, device):
+def training_loop(model,
+                  train_loader,
+                  val_loader,
+                  loss_function,
+                  optimizer,
+                  num_epochs,
+                  device,
+                  scheduler):
     model.to(device)
 
     best_val_accuracy = 0.0
@@ -84,6 +91,8 @@ def training_loop(model, train_loader, val_loader, loss_function, optimizer, num
             best_val_accuracy = val_accuracy
             best_epoch = epoch + 1
             best_model_state = copy.deepcopy(model.state_dict())
+
+        scheduler.step(epoch_val_loss)
 
     print("--- Finished Training ---")
 
