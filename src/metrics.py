@@ -1,6 +1,7 @@
 import os
 
 import matplotlib.ticker as mticker
+import torch
 from matplotlib import pyplot as plt
 
 
@@ -81,3 +82,24 @@ def plot_training_metrics(metrics, save_path):
     # Display the plots
     plt.show()
     fig.savefig(os.path.join(save_path, 'results.png'))
+
+
+def calculate_per_class_accuracy(model, data_loader, class_names, device):
+    model.eval()
+    correct = [0] * len(class_names)
+    total = [0] * len(class_names)
+
+    with torch.no_grad():
+        for images, labels in data_loader:
+            images, labels = images.to(device), labels.to(device)
+            predictions = model(images).argmax(dim=1)
+
+            for class_index in range(len(class_names)):
+                class_mask = labels == class_index
+                total[class_index] += class_mask.sum().item()
+                correct[class_index] += (predictions[class_mask] == labels[class_mask]).sum().item()
+
+    return {
+        class_name: 100 * correct[index] / total[index]
+        for index, class_name in enumerate(class_names)
+    }
