@@ -21,9 +21,16 @@
   },
 
   "training": {
-    "epochs": 100,
+    "epochs": 150,
     "optimizer": "Adam",
     "learning_rate": 0.0005,
-    "weight_decay": 0.0004
+    "weight_decay": 0.0004,
+    "scheduler": {
+      "name": "ReduceLROnPlateau",
+      "mode": "min",
+      "factor": 0.5,
+      "patience": 4,
+      "min_lr": 0.000001
+    }
   }
 }
