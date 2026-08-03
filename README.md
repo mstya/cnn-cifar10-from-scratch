@@ -71,5 +71,5 @@ The complete run history and parameters are stored in `experiments/summary.csv`.
 ## Next steps
 
 - Add early stopping.
-- Evaluate per-class accuracy, a confusion matrix, and examples of incorrect predictions.
+- [DONE] Evaluate per-class accuracy, a confusion matrix, and examples of incorrect predictions.
 - Compare this model with a deeper CNN architecture.
