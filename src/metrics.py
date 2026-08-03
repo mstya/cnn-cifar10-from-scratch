@@ -103,3 +103,41 @@ def calculate_per_class_accuracy(model, data_loader, class_names, device):
         class_name: 100 * correct[index] / total[index]
         for index, class_name in enumerate(class_names)
     }
+
+
+def calculate_confusion_matrix(model, data_loader, num_classes, device):
+    model.eval()
+    matrix = torch.zeros((num_classes, num_classes), dtype=torch.int64)
+
+    with torch.no_grad():
+        for images, labels in data_loader:
+            images, labels = images.to(device), labels.to(device)
+            predictions = model(images).argmax(dim=1)
+
+            for true_label, predicted_label in zip(labels.cpu(), predictions.cpu()):
+                matrix[true_label, predicted_label] += 1
+
+    return matrix
+
+
+def plot_confusion_matrix(matrix, class_names):
+    normalized_matrix = matrix.float() / matrix.sum(dim=1, keepdim=True)
+
+    fig, ax = plt.subplots(figsize=(10, 8))
+    image = ax.imshow(normalized_matrix, cmap="Blues", vmin=0, vmax=1)
+    fig.colorbar(image, ax=ax, label="Fraction of true class")
+
+    ax.set_xticks(range(len(class_names)), class_names, rotation=45, ha="right")
+    ax.set_yticks(range(len(class_names)), class_names)
+    ax.set_xlabel("Predicted class")
+    ax.set_ylabel("True class")
+    ax.set_title("Normalized Confusion Matrix")
+
+    for true_index in range(len(class_names)):
+        for predicted_index in range(len(class_names)):
+            value = normalized_matrix[true_index, predicted_index].item()
+            color = "white" if value > 0.5 else "black"
+            ax.text(predicted_index, true_index, f"{value:.2f}", ha="center", va="center", color=color)
+
+    plt.tight_layout()
+    plt.show()
