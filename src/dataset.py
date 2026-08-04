@@ -1,8 +1,10 @@
 import os
 
+import torch
 from PIL import Image
 from torch.utils.data import Dataset
-from torchvision.transforms import Compose, RandomHorizontalFlip, RandomRotation, ToTensor, Normalize, RandomCrop
+from torchvision.transforms import Compose, RandomHorizontalFlip, RandomRotation, ToTensor, Normalize, RandomCrop, \
+    RandomErasing, PILToTensor, ConvertImageDtype, ColorJitter
 
 
 class TmpCifarDataset(Dataset):
@@ -32,8 +34,7 @@ class TmpCifarDataset(Dataset):
         return self.df.iloc[idx]['label']
 
 def define_transformations(augmentation, mean, std):
-    train_transforms = build_train_transformations(augmentation)
-    train_transforms.extend([ToTensor(), Normalize(mean, std)])
+    train_transforms = build_train_transformations(augmentation, mean, std)
     train_transformations = Compose(train_transforms)
 
     val_transformations = Compose([
@@ -43,11 +44,17 @@ def define_transformations(augmentation, mean, std):
 
     return train_transformations, val_transformations
 
-def build_train_transformations(augmentation):
+def build_train_transformations(augmentation, mean, std):
     transform_map = {
         "random_horizontal_flip": lambda : RandomHorizontalFlip(p=float(augmentation['random_horizontal_flip']['p'])),
         "random_rotation": lambda : RandomRotation(degrees=int(augmentation['random_rotation']['degrees'])),
         "random_crop": lambda : RandomCrop(size=int(augmentation['random_crop']['size']), padding=int(augmentation['random_crop']['padding'])),
+        "random_erasing": lambda : RandomErasing(),
+        "pil_to_tensor": lambda : PILToTensor(),
+        "convert_image_dtype": lambda : ConvertImageDtype(torch.float),
+        "to_tensor": lambda : ToTensor(),
+        "normalize": lambda : Normalize(mean=mean, std=std),
+        "color_jitter": lambda : ColorJitter(brightness=.5, hue=.3)
     }
 
     transforms = []
