@@ -10,7 +10,9 @@
       "random_crop": {
         "size": 32,
         "padding": 4
-      }
+      },
+      "to_tensor": {},
+      "normalize": {}
     }
   },
   "model": {
