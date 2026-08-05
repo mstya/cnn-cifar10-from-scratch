@@ -1,10 +1,34 @@
 import os
+from pathlib import Path
 
 import torch
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision.transforms import Compose, RandomHorizontalFlip, RandomRotation, ToTensor, Normalize, RandomCrop, \
     RandomErasing, PILToTensor, ConvertImageDtype, ColorJitter
+
+
+class CifarTestDataset(Dataset):
+    def __init__(self, test_dir, transform=None):
+        self.test_dir = Path(test_dir)
+        self.transform = transform
+        self.ids = sorted(int(path.stem) for path in self.test_dir.glob("*.png"))
+
+    def __len__(self):
+        return len(self.ids)
+
+    def __getitem__(self, idx):
+        image_id = self.ids[idx]
+        image = self.retrieve_image(image_id)
+        if self.transform is not None:
+            image = self.transform(image)
+        return image, image_id
+
+    def retrieve_image(self, image_id):
+        image_path = self.test_dir / f"{image_id}.png"
+        with Image.open(image_path) as img:
+            image = img.convert("RGB")
+        return image
 
 
 class TmpCifarDataset(Dataset):

@@ -50,9 +50,10 @@ class SimpleCNNConv3(nn.Module):
             nn.Flatten(),
             nn.Linear(6272, 512),
             nn.ReLU(),
-            nn.Dropout(p=dropout),
+            nn.Dropout(p=dropout * 0.15),
             nn.Linear(512, 256),
             nn.ReLU(),
+            nn.Dropout(p=dropout * 0.1),
             nn.Linear(256, num_classes),
         )
 
