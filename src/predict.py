@@ -40,22 +40,20 @@ def build_predict_transform(mean, std, image_size=32):
     ])
 
 
-def predict(image, model, class_names=CIFAR10_CLASSES, transform=None, device=None):
-    """Predict the class of a single image using a trained model.
+def predict_proba(image, model, transform=None, device=None):
+    """Run a trained model on a single image and return per-class probabilities.
 
     Args:
         image: a PIL.Image.Image, or a path (str/Path) to an image file.
         model: a trained torch.nn.Module (e.g. SimpleCNNConv3) already loaded
             with trained weights.
-        class_names: list mapping class index -> class name. Defaults to
-            CIFAR10_CLASSES.
         transform: optional preprocessing transform. Defaults to the
             resize/normalize pipeline built from configs/data_stats.json.
         device: torch.device to run inference on. Defaults to the model's
             current device.
 
     Returns:
-        str: the predicted class name.
+        torch.Tensor: 1D tensor of class probabilities (length = num_classes).
     """
     if isinstance(image, (str, Path)):
         with Image.open(image) as img:
@@ -77,6 +75,29 @@ def predict(image, model, class_names=CIFAR10_CLASSES, transform=None, device=No
     model.eval()
     with torch.no_grad():
         outputs = model(input_tensor)
-        predicted_index = outputs.argmax(dim=1).item()
+        probabilities = torch.softmax(outputs, dim=1)[0]
+
+    return probabilities
+
+
+def predict(image, model, class_names=CIFAR10_CLASSES, transform=None, device=None):
+    """Predict the class of a single image using a trained model.
+
+    Args:
+        image: a PIL.Image.Image, or a path (str/Path) to an image file.
+        model: a trained torch.nn.Module (e.g. SimpleCNNConv3) already loaded
+            with trained weights.
+        class_names: list mapping class index -> class name. Defaults to
+            CIFAR10_CLASSES.
+        transform: optional preprocessing transform. Defaults to the
+            resize/normalize pipeline built from configs/data_stats.json.
+        device: torch.device to run inference on. Defaults to the model's
+            current device.
+
+    Returns:
+        str: the predicted class name.
+    """
+    probabilities = predict_proba(image, model, transform=transform, device=device)
+    predicted_index = int(probabilities.argmax().item())
 
     return class_names[predicted_index]
