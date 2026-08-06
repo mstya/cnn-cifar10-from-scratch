@@ -59,8 +59,8 @@ into a Docker image with the trained checkpoint baked in at build time — no
 GPU/Kaggle credentials needed to run it, only to train.
 
 **Which checkpoint gets served is controlled by one file:
-[`configs/serving_config.json`](configs/serving_config.json)** (currently `{"model_experiment": 90}`
-— see [Best result](#best-result--simplecnnconv3) for how that compares to the other candidates).
+[`configs/serving_config.json`](configs/serving_config.json)** (currently `{"model_experiment": 93}`,
+the best of the three seeds — see [Best result](#best-result--simplecnnconv3)).
 It's the single source of truth read by `src/api.py`, the `Dockerfile` (via the
 `Makefile`/`docker-compose.yml`), and `notebooks/04_inference.ipynb` — point it
 at a new experiment (e.g. the one `train.py` just produced) and every one of
@@ -159,13 +159,12 @@ Results across different seeds (all verified to load against the current `src/mo
 | Seed | Experiment | Best Val Accuracy | Best Epoch |
 | ---: | :--- | ---: | ---: |
 | 1 | Exp #92 | 88.11% | 90 |
-| 2 | Exp #93 (best single run) | 88.13% | 91 |
+| 2 | **Exp #93 (currently served, best single run)** | **88.13%** | 91 |
 | 3 | Exp #90 | 87.81% | 87 |
 | **Mean** | | **88.02%** | — |
 
 That's a **+4.14 pt** improvement in best-val-accuracy over the `SimpleCNN` baseline (83.88% mean).
-`configs/serving_config.json` currently points at **experiment 90** — not the best of the three
-above (that's #93) — see [Serving the API](#serving-the-api) to switch it.
+`configs/serving_config.json` points at **experiment 93**, the best of the three above.
 
 **Note on older runs:** `experiments/summary.csv` also records earlier `SimpleCNNConv3` attempts
 (Exp #65/#66/#68/#78) scoring similarly (up to 88.19%), but the classifier head's shape changed in
@@ -183,5 +182,5 @@ The complete run history and parameters are stored in `experiments/summary.csv`.
 - [DONE] Re-run seeds 1 and 2 at 150 epochs against the current architecture (Exp #92/#93) to get a real multi-seed mean.
 - Tag each `experiments/<N>/config.json` with a model/architecture version so future architecture
   changes don't silently orphan old checkpoints (see note above).
-- Point `configs/serving_config.json` at experiment 93 (the best of the three above), or retrain
-  seed 3 to see if it can beat it.
+- [DONE] Point `configs/serving_config.json` at the best of the three seeds (experiment 93).
+- Retrain seed 3 to see if it can beat experiment 93's 88.13%.
