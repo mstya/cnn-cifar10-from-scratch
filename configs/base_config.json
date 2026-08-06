@@ -1,5 +1,5 @@
 {
-  "seed": 3,
+  "seed": 2,
   "data": {
     "batch_size": 64,
     "train_split": 0.85,
