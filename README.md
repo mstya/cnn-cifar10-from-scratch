@@ -8,7 +8,7 @@ An educational project for CIFAR-10 image classification using a CNN implemented
 pip install -r requirements.txt
 
 # 1. Train (needs Kaggle credentials, e.g. ~/.kaggle/kaggle.json — see "Training" below)
-make train                  # same as: python train.py
+make train                  # same as: python -m src.train
 
 # 2. Serve the checkpoint configured in configs/serving_config.json as an API
 make serve                  # same as: docker compose up --build
@@ -27,9 +27,8 @@ configs/       # configurations, dataset statistics, train/validation split, and
                # serving_config.json (which experiment the API/Docker/notebook serve)
 data/processed # metadata CIFAR-10
 notebooks/     # EDA, training, analysis, and inference runs
-src/           # dataset, model, training loop, metrics, prediction, and API
+src/           # dataset, model, training loop, metrics, prediction, API, and train.py
 experiments/   # run artifacts and summary.csv
-train.py       # one-command training entrypoint
 Dockerfile     # packages src/api.py + a trained checkpoint into a servable image
 Makefile       # `make train` / `make serve`
 ```
@@ -41,8 +40,8 @@ so `kagglehub` can download the `cifar-10` competition data non-interactively.
 
 ```bash
 pip install -r requirements.txt
-make train                          # or: python train.py
-python train.py --epochs 5          # quick smoke test
+make train                            # or: python -m src.train
+python -m src.train --epochs 5        # quick smoke test
 ```
 
 This downloads the dataset (cached by `kagglehub` after the first run), rebuilds
@@ -50,6 +49,46 @@ This downloads the dataset (cached by `kagglehub` after the first run), rebuilds
 `experiments/<N>/` directory containing `model.pt`, `config.json`,
 `classes.json`, `metrics.csv`, and `results.png` — the same artifacts produced
 by `notebooks/02_model.ipynb`, but from a single non-interactive command.
+
+### Early stopping
+
+`src/training.py`'s `training_loop` always keeps the checkpoint from whichever
+epoch had the best validation accuracy so far (that part isn't new). Early
+stopping adds one more thing on top: it **ends training early** once
+validation accuracy hasn't improved for a run of consecutive epochs, instead
+of always running the full epoch budget.
+
+Concretely, each epoch:
+1. If `val_accuracy` beats the best seen so far (by more than `min_delta`),
+   that checkpoint is saved and a counter resets to 0.
+2. Otherwise the counter increments.
+3. Once the counter reaches `patience`, training stops (the loop `break`s) —
+   the returned model is still the best checkpoint from step 1, not the last
+   epoch run.
+
+It's configured under `training.early_stopping` in `configs/base_config.json`:
+
+```json
+"early_stopping": { "patience": 20, "min_delta": 0.0 }
+```
+
+- **`patience`** — how many epochs in a row without improvement to tolerate
+  before stopping. Set to `null`/omit the whole `early_stopping` block to
+  disable it (the original always-run-`epochs`-epochs behavior). Deliberately
+  set higher than the LR scheduler's own `patience` (4) above it, so
+  `ReduceLROnPlateau` gets a few chances to lower the learning rate — which
+  often lets validation accuracy recover — before early stopping gives up.
+- **`min_delta`** — minimum improvement to count as "improved" (guards
+  against stopping the counter's reset on noise-level ties).
+
+Override per run without touching the config: `--early-stopping-patience N`
+(`--early-stopping-patience 0` disables it for that run).
+
+**Why it's worth having:** Exp #93 (the current best checkpoint) hit its best
+validation accuracy (88.13%) at epoch 91 of 150, then spent the remaining 59
+epochs oscillating between 87.6–88.13% without ever beating it. A
+`patience=20` run would have stopped around epoch 111, saving roughly a
+quarter of that run's training time for the same result.
 
 ## Serving the API
 
@@ -63,7 +102,7 @@ GPU/Kaggle credentials needed to run it, only to train.
 the best of the three seeds — see [Best result](#best-result--simplecnnconv3)).
 It's the single source of truth read by `src/api.py`, the `Dockerfile` (via the
 `Makefile`/`docker-compose.yml`), and `notebooks/04_inference.ipynb` — point it
-at a new experiment (e.g. the one `train.py` just produced) and every one of
+at a new experiment (e.g. the one `src/train.py` just produced) and every one of
 those picks it up automatically. Make sure the checkpoint you point it at actually
 loads against the current `src/model.py` first (see the caveat in that section).
 
@@ -176,7 +215,7 @@ The complete run history and parameters are stored in `experiments/summary.csv`.
 
 ## Next steps
 
-- Add early stopping.
+- [DONE] Add early stopping (see [Early stopping](#early-stopping)).
 - [DONE] Evaluate per-class accuracy, a confusion matrix, and examples of incorrect predictions.
 - [DONE] Compare this model with a deeper CNN architecture (`SimpleCNNConv3`).
 - [DONE] Re-run seeds 1 and 2 at 150 epochs against the current architecture (Exp #92/#93) to get a real multi-seed mean.

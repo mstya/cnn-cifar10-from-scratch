@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Serves the CIFAR-10 classifier API. The trained checkpoint is baked into the
 # image at build time (see MODEL_EXPERIMENT below) — training itself happens
-# natively on the host (`python train.py`), not in this image.
+# natively on the host (`make train` / `python -m src.train`), not in this image.
 FROM python:3.12-slim
 
 # Which experiments/<N> checkpoint to bake into the image. No default here on

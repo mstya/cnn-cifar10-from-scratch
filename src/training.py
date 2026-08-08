@@ -65,12 +65,24 @@ def training_loop(model,
                   optimizer,
                   num_epochs,
                   device,
-                  scheduler):
+                  scheduler,
+                  early_stopping_patience=None,
+                  early_stopping_min_delta=0.0):
+    """Train for up to `num_epochs`, always keeping the best-val-accuracy
+    checkpoint (as before).
+
+    If `early_stopping_patience` is set, training stops early once
+    `early_stopping_patience` consecutive epochs pass without validation
+    accuracy improving by more than `early_stopping_min_delta`. Leaving it
+    `None` (the default) disables early stopping and keeps the old
+    run-for-num_epochs behavior.
+    """
     model.to(device)
 
     best_val_accuracy = 0.0
     best_model_state = None
     best_epoch = 0
+    epochs_without_improvement = 0
 
     train_losses, val_losses, val_accuracies, train_accuracies = [], [], [], []
 
@@ -87,12 +99,20 @@ def training_loop(model,
 
         print(f"Epoch [{epoch+1}/{num_epochs}], Train Loss: {epoch_loss:.4f}, Train Accuracy: {train_accuracy:.2f}% Val Loss: {epoch_val_loss:.4f}, Val Accuracy: {val_accuracy:.2f}%")
 
-        if val_accuracy > best_val_accuracy:
+        if val_accuracy > best_val_accuracy + early_stopping_min_delta:
             best_val_accuracy = val_accuracy
             best_epoch = epoch + 1
             best_model_state = copy.deepcopy(model.state_dict())
+            epochs_without_improvement = 0
+        else:
+            epochs_without_improvement += 1
 
         scheduler.step(epoch_val_loss)
+
+        if early_stopping_patience is not None and epochs_without_improvement >= early_stopping_patience:
+            print(f"--- Early stopping: no val accuracy improvement for {early_stopping_patience} epochs "
+                  f"(best {best_val_accuracy:.2f}% at epoch {best_epoch}) ---")
+            break
 
     print("--- Finished Training ---")
 

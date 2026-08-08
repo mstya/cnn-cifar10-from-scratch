@@ -30,6 +30,10 @@
       "factor": 0.5,
       "patience": 4,
       "min_lr": 1e-06
+    },
+    "early_stopping": {
+      "patience": 20,
+      "min_delta": 0.0
     }
   }
 }

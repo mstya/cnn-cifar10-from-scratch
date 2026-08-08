@@ -1,8 +1,9 @@
 """Train the CIFAR-10 CNN end to end, from raw Kaggle data to a saved checkpoint.
 
-Usage:
-    python train.py
-    python train.py --config configs/base_config.json --epochs 5
+Usage (run from the repo root — needed for the `from src...` imports below to
+resolve; `make train` does this for you):
+    python -m src.train
+    python -m src.train --config configs/base_config.json --epochs 5
 
 Prerequisites:
     - Kaggle credentials configured locally (e.g. ~/.kaggle/kaggle.json) so
@@ -35,7 +36,7 @@ from src.metrics import plot_training_metrics
 from src.model import SimpleCNN, SimpleCNNConv3
 from src.training import device, training_loop
 
-REPO_ROOT = Path(__file__).resolve().parent
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 MODEL_REGISTRY = {
     "SimpleCNN": SimpleCNN,
@@ -50,6 +51,9 @@ def parse_args():
                          help="Path to the training config JSON.")
     parser.add_argument("--epochs", type=int, default=None,
                          help="Override the number of epochs from the config.")
+    parser.add_argument("--early-stopping-patience", type=int, default=None,
+                         help="Override configs/base_config.json's training.early_stopping.patience. "
+                              "Pass 0 to disable early stopping (always run the full --epochs).")
     parser.add_argument("--results-dir", default=str(REPO_ROOT / "experiments"),
                          help="Directory experiments are written to.")
     return parser.parse_args()
@@ -156,6 +160,15 @@ def main():
     scheduler_config = config_json["training"]["scheduler"]
     epochs = args.epochs if args.epochs is not None else int(config_json["training"]["epochs"])
 
+    # early_stopping is optional in the config (older configs.json won't have
+    # it) — absent means "disabled", same as the training_loop default.
+    early_stopping_config = config_json["training"].get("early_stopping", {})
+    if args.early_stopping_patience is not None:
+        early_stopping_patience = args.early_stopping_patience or None  # 0 -> disabled
+    else:
+        early_stopping_patience = early_stopping_config.get("patience")
+    early_stopping_min_delta = float(early_stopping_config.get("min_delta", 0.0))
+
     print("--- Downloading / locating CIFAR-10 dataset via kagglehub ---")
     dataset_path = kagglehub.competition_download("cifar-10")
 
@@ -194,17 +207,23 @@ def main():
 
     model, metrics = training_loop(
         model, train_loader, val_loader, loss_function, optimizer, epochs, device, scheduler,
+        early_stopping_patience=early_stopping_patience,
+        early_stopping_min_delta=early_stopping_min_delta,
     )
 
     print("--- Saving experiment artifacts ---")
     results_dir, exp_number, exp_path = prepare_results_dir(args.results_dir)
 
+    # metrics[0] (train_losses) has one entry per epoch actually run, which is
+    # <= epochs when early stopping cut training short.
+    epochs_trained = len(metrics[0])
+
     save_config(exp_path, config_json)
     save_classes(exp_path, class_names)
     save_model(exp_path, model)
-    save_results(results_dir, exp_path, exp_number, learning_rate, metrics, model.__class__.__name__, epochs,
-                 batch_size, optimizer.__class__.__name__, weight_decay, seed, str(augmentation), dropout,
-                 scheduler_config)
+    save_results(results_dir, exp_path, exp_number, learning_rate, metrics, model.__class__.__name__,
+                 epochs_trained, batch_size, optimizer.__class__.__name__, weight_decay, seed, str(augmentation),
+                 dropout, scheduler_config)
     plot_training_metrics(metrics, exp_path)
 
     print(f"\nDone. Model and artifacts saved to {exp_path}/")

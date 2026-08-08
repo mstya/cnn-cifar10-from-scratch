@@ -8,7 +8,7 @@ MODEL_EXPERIMENT := $(shell python3 -c "import json; print(json.load(open('confi
 .PHONY: train serve build
 
 train:
-	python train.py
+	python -m src.train
 
 ## Build the API image (with the configured checkpoint baked in) and run it.
 serve:
